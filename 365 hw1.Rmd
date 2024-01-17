@@ -1,0 +1,97 @@
+```{r}
+"Sanghyun Jang"
+"Sta365 hw1 using r"
+
+#Setting the probabilities and the initial alpha and beta values for the prior distribution
+Theta_ABC <- c(0.3, 0.5, 0.7)
+
+alpha_A = 1
+beta_A = 1
+
+alpha_B = 1
+beta_B = 1
+
+alpha_C = 1
+beta_C = 1
+
+
+#Function that picks the maximum value among the three beta distributions
+pick_option <- function(){
+  
+A_score <- rbeta(1, alpha_A, beta_A)
+B_score <- rbeta(1, alpha_B, beta_B)
+C_score <- rbeta(1, alpha_C, beta_C)
+
+  if(max(A_score, B_score, C_score) == A_score)
+     pick = 1
+  if(max(A_score, B_score, C_score) == B_score)
+     pick = 2
+  if(max(A_score, B_score, C_score) == C_score)
+     pick = 3
+
+return(pick)
+}
+
+#Function that takes and tests the true probability of the chosen theta to help update the posterior distribution
+test <- function(pick){
+  return(rbinom(1, 1, Theta_ABC[pick] ))
+}
+
+#Function that updates the distribution of the chosen theta based on the test results. 
+#If the test passed, the distribution is reinforced by increasing the alpha value. If the test failed, it is discouraged by increasing the beta value
+update <- function(pick, outcome){
+  if(pick == 1){
+    return(c(alpha_A + outcome, beta_A + 1 - outcome))
+  }
+  if(pick == 2){
+    return(c(alpha_B + outcome, beta_B + 1 - outcome))
+  }
+  if(pick == 3){
+    return(c(alpha_C + outcome, beta_C + 1 - outcome))
+  }
+}
+
+#Repeats the updating process until enough data has been gathered for exploitation
+#Throughout each repetition the result gets stored in a vector and its proportion gets calculated
+#Once the proportion of an option exceeds 90% of the total selection, the exploration stops and gives the output for exploitation
+results <- c()
+
+repeat{
+  picked <- pick_option()
+  results <- c(results, picked)
+  
+  if(picked == 1){
+   alpha_A <- update(picked, test(picked))[1]
+    beta_A <- update(picked, test(picked))[2]
+  }
+  if(picked == 2){
+   alpha_B <- update(picked, test(picked))[1]
+   beta_B <- update(picked, test(picked))[2]
+  }
+  if(picked == 3){
+   alpha_C <- update(picked, test(picked))[1]
+   beta_C <- update(picked, test(picked))[2]
+  }
+  if(length(results) > 10){
+    if(mean(results == 1) > 0.9){
+      output = "Theta_A"
+      break
+    }
+    if(mean(results == 2) > 0.9){
+      output = "Theta_B"
+      break
+    }
+    if(mean(results == 3) > 0.9){
+      output = "Theta_C"
+      break
+    }
+    
+  }
+}
+output
+```
+
+
+
+
+
